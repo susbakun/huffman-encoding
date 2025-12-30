@@ -67,7 +67,6 @@ impl Huffman {
 
             self.table.entry(current.clone()).and_modify(|c| {
                 let rep_char = *c as char;
-                println!("{rep_char}");
                 output.push(rep_char);
                 current.clear();
             });
