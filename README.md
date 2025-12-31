@@ -9,16 +9,21 @@ Huffman encoding is a lossless data compression algorithm that assigns variable-
 ## Features
 
 - ✅ Character frequency counting
-- ✅ Huffman tree construction (bottom-up approach)
-- ✅ Encoding table generation
+- ✅ Huffman tree construction (bottom-up approach using min-heap)
+- ✅ Encoding table generation with `BitVec` for efficient bit manipulation
 - ✅ Text encoding to binary representation
 - ✅ Binary decoding back to original text
 - ✅ Full round-trip encoding/decoding
+- ✅ Edge case handling (empty input, single character)
 
 ## Requirements
 
-- Rust 1.70+ (or latest stable)
+- Rust 2024 edition
 - Cargo (comes with Rust)
+
+## Dependencies
+
+- `bitvec` 1.0.1 - Efficient bit-level operations
 
 ## Installation
 
@@ -61,16 +66,31 @@ cargo run -- data/S.csv
 
 This will create `data/S.csv.huff` containing the decoded output.
 
+### Library Usage
+
+```rust
+use huffman::Huffman;
+
+let input = "hello world".to_string();
+let mut huffman = Huffman::new(input);
+
+// Encode to BitVec
+let encoded = huffman.encode();
+
+// Decode back to string
+let decoded = huffman.decode();
+```
+
 ## Project Structure
 
 ```
 huffman/
 ├── src/
 │   ├── main.rs              # Entry point
-│   ├── lib.rs               # Library interface
+│   ├── lib.rs               # Library interface and file I/O
 │   └── huffman/
-│       ├── mod.rs           # Huffman struct and main logic
-│       └── huffman_node.rs  # HuffmanNode tree implementation
+│       ├── mod.rs           # Huffman struct (encode/decode/table generation)
+│       └── huffman_node.rs  # HuffmanNode tree and min-heap construction
 ├── data/                    # Sample data files
 ├── Cargo.toml
 └── README.md
@@ -78,11 +98,12 @@ huffman/
 
 ## How It Works
 
-1. **Frequency Analysis**: Counts the frequency of each character in the input
-2. **Tree Building**: Constructs a binary tree using a min-heap, combining nodes with lowest frequencies
-3. **Code Generation**: Traverses the tree to generate binary codes (0 for left, 1 for right)
-4. **Encoding**: Replaces each character with its corresponding binary code
-5. **Decoding**: Reads the binary codes and traverses the tree to reconstruct the original text
+1. **Frequency Analysis**: Counts byte frequency using `HashMap<u8, usize>`
+2. **Min-Heap Building**: Creates `BinaryHeap<HuffmanNode>` ordered by frequency (ascending)
+3. **Tree Construction**: Repeatedly combines two lowest-frequency nodes until one root remains
+4. **Code Generation**: Traverses tree recursively - left = 0, right = 1 - storing codes in `HashMap<u8, BitVec>`
+5. **Encoding**: Maps each input byte to its `BitVec` code
+6. **Decoding**: Iterates through bits, matching accumulated bits against the code table
 
 ## Testing
 
@@ -92,15 +113,18 @@ Run the test suite:
 cargo test
 ```
 
-The project includes comprehensive tests for:
+The project includes 12 tests covering:
 - Character frequency counting
-- Tree construction
+- Tree construction (including single-node trees)
 - Encoding/decoding round-trips
-- Edge cases (single character, empty input, etc.)
+- Edge cases (empty input, single character, all unique characters)
+- Table integrity (no empty codes, all bytes present)
+- Deterministic encoding
 
 ## Implementation Details
 
-- Uses `BinaryHeap` for efficient min-heap operations
-- Implements `Ord` trait for HuffmanNode to enable heap ordering
-- Stores encoding table as `HashMap<String, u8>` (code → character)
-- Handles edge cases like single-character inputs
+- Uses `BinaryHeap` with custom `Ord` implementation for min-heap behavior
+- `BitVec` from the `bitvec` crate for memory-efficient bit storage
+- Encoding table stored as `HashMap<u8, BitVec>` (byte → code)
+- Single-character inputs receive a default code of `[0]`
+- Empty inputs handled gracefully with empty tree/output
