@@ -22,9 +22,9 @@ pub fn run() {
         .expect("Failed to read the file");
 
     let mut huffman = Huffman::new(input);
-    let encoded = huffman.encode();
+    huffman.encode();
 
-    let decoded = huffman.decode(encoded.len());
+    let decoded = huffman.decode();
 
     file_path.push_str(".huff");
 

@@ -32,6 +32,16 @@ impl HuffmanNode {
     }
 
     pub fn build_tree(min_heap: &mut MinHeap) -> Self{
+        // Handle empty input
+        if min_heap.is_empty() {
+            return HuffmanNode {
+                byte: None,
+                count: 0,
+                left: None,
+                right: None,
+            };
+        }
+
         while min_heap.len() > 1 {
             let left = min_heap.pop().unwrap();
             let right = min_heap.pop().unwrap();
