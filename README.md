@@ -15,6 +15,8 @@ Huffman encoding is a lossless data compression algorithm that assigns variable-
 - ✅ Binary decoding back to original text
 - ✅ Full round-trip encoding/decoding
 - ✅ Edge case handling (empty input, single character)
+- ✅ Binary file I/O with bit-count header for accurate reconstruction
+- ✅ Compression statistics output (original vs encoded size)
 
 ## Requirements
 
@@ -54,9 +56,9 @@ Or use the compiled binary:
 The program will:
 1. Read the input file
 2. Build a Huffman tree based on character frequencies
-3. Encode the file content
-4. Decode the encoded content
-5. Write the decoded output to `<input_file>.huff`
+3. Encode the file content to a `BitVec`
+4. Display compression statistics (original vs encoded size)
+5. Write the encoded binary to `<input_file>.huff` with a bit-count header
 
 ### Example
 
@@ -87,7 +89,8 @@ let decoded = huffman.decode();
 huffman/
 ├── src/
 │   ├── main.rs              # Entry point
-│   ├── lib.rs               # Library interface and file I/O
+│   ├── lib.rs               # Library interface and run function
+│   ├── io.rs                # File I/O utilities (read/write text and binary)
 │   └── huffman/
 │       ├── mod.rs           # Huffman struct (encode/decode/table generation)
 │       └── huffman_node.rs  # HuffmanNode tree and min-heap construction
@@ -128,3 +131,11 @@ The project includes 12 tests covering:
 - Encoding table stored as `HashMap<u8, BitVec>` (byte → code)
 - Single-character inputs receive a default code of `[0]`
 - Empty inputs handled gracefully with empty tree/output
+
+### I/O Module (`io.rs`)
+
+Provides four utility functions:
+- `read_string_file()` - Read text file to `String`
+- `write_string_to_file()` - Write `String` to text file
+- `read_huffman_file()` - Read `.huff` binary file, extracting bit count header and reconstructing `BitVec`
+- `write_bits_to_file()` - Write `BitVec` to binary file with 8-byte little-endian bit count header
