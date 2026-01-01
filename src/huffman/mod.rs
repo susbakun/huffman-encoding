@@ -13,8 +13,9 @@ pub struct Huffman {
 }
 
 impl Huffman{
-    pub fn new(input: String) -> Self {
+    pub fn new(input: &String) -> Self {
         let root = HuffmanNode::new(&input);
+        let input = input.clone();
         let mut huffman = Huffman {
             table: HashMap::new(),
             input,
@@ -69,14 +70,12 @@ impl Huffman{
         bits
     }
     
-    pub fn decode(&mut self) -> String {
-        let bits = &self.encoded;
-        
+    pub fn decode(&mut self, encoded: &BitVec) -> String {
         let mut current = bitvec![];
         let mut output = String::new();
     
-        for i in 0..bits.len() {
-            let bit = bits[i];
+        for i in 0..encoded.len() {
+            let bit = encoded[i];
             current.push(bit);
         
             self.table
@@ -102,22 +101,22 @@ mod tests {
     #[test]
     fn encode_decode_roundtrip() {
         let input = "hello world".to_string();
-        let mut huffman = Huffman::new(input.clone());
+        let mut huffman = Huffman::new(&input.clone());
 
         let encoded = huffman.encode();
         assert!(!encoded.is_empty(), "encoded output should not be empty");
 
-        let decoded = huffman.decode();
+        let decoded = huffman.decode(&encoded);
         assert_eq!(decoded, input);
     }
 
     #[test]
     fn single_character_input() {
         let input = "aaaaaa".to_string();
-        let mut huffman = Huffman::new(input.clone());
+        let mut huffman = Huffman::new(&input.clone());
 
-        huffman.encode();
-        let decoded = huffman.decode();
+        let encoded = huffman.encode();
+        let decoded = huffman.decode(&encoded);
 
         assert_eq!(decoded, input);
     }
@@ -125,10 +124,10 @@ mod tests {
     #[test]
     fn empty_input() {
         let input = "".to_string();
-        let mut huffman = Huffman::new(input.clone());
+        let mut huffman = Huffman::new(&input.clone());
 
         let encoded = huffman.encode();
-        let decoded = huffman.decode();
+        let decoded = huffman.decode(&encoded);
 
         assert!(encoded.is_empty());
         assert_eq!(decoded, input);
@@ -137,10 +136,10 @@ mod tests {
     #[test]
     fn all_unique_characters() {
         let input = "abcdefg".to_string();
-        let mut huffman = Huffman::new(input.clone());
+        let mut huffman = Huffman::new(&input.clone());
 
-        huffman.encode();
-        let decoded = huffman.decode();
+        let encoded = huffman.encode();
+        let decoded = huffman.decode(&encoded);
 
         assert_eq!(decoded, input);
     }
@@ -148,7 +147,7 @@ mod tests {
     #[test]
     fn table_contains_all_input_bytes() {
         let input = "mississippi".to_string();
-        let huffman = Huffman::new(input.clone());
+        let huffman = Huffman::new(&input.clone());
 
         for byte in input.bytes() {
             assert!(
@@ -162,7 +161,7 @@ mod tests {
     #[test]
     fn no_empty_codes_in_table() {
         let input = "hello".to_string();
-        let huffman = Huffman::new(input);
+        let huffman = Huffman::new(&input);
 
         for (byte, code) in &huffman.table {
             assert!(
@@ -174,20 +173,11 @@ mod tests {
     }
 
     #[test]
-    fn decode_without_encode_returns_empty() {
-        let input = "test".to_string();
-        let mut huffman = Huffman::new(input);
-
-        let decoded = huffman.decode();
-        assert!(decoded.is_empty());
-    }
-
-    #[test]
     fn encoding_is_deterministic() {
         let input = "banana".to_string();
 
-        let mut h1 = Huffman::new(input.clone());
-        let mut h2 = Huffman::new(input.clone());
+        let mut h1 = Huffman::new(&input.clone());
+        let mut h2 = Huffman::new(&input.clone());
 
         let b1 = h1.encode();
         let b2 = h2.encode();
